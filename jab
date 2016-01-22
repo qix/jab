@@ -10,6 +10,7 @@ from tooler import (
 )
 from tooler.local import PIPE
 
+import home
 import lights
 import photo
 import sonos
@@ -17,6 +18,7 @@ import sonos
 tooler = Tooler()
 
 # Add the submodules
+tooler.add_submodule('home', home.tooler)
 tooler.add_submodule('lights', lights.tooler)
 tooler.add_submodule('photo', photo.tooler)
 tooler.add_submodule('sonos', sonos.tooler)
@@ -101,29 +103,27 @@ def cc():
 def screenshot():
   bash('''
 filename=`date +"%Y-%m-%d.%H%M%S.png"`
-from="/tmp/shutter.png"
 url="http://j.yud.co.za/screenshots/$filename"
-tmp=`tempfile`
+tmp=`tempfile --suffix=.png`
+S3_CFG=~/.s3cfg-personal
 
-rm -f $from
-shutter --select --profile=Upload -e
-if [[ ! -e "$from" ]]; then
+echo "Capturing to: $tmp"
+shutter --exit_after_capture --no_session --select --output=$tmp --remove_cursor
+if [[ ! -e "$tmp" ]]; then
   msg "Screenshot file not found"
   exit 1
 fi
 
-mv $from $tmp
-
 # Clear clipboard and copy url onto it
+echo "Uploading to: $url"
 xsel -b -c
 xsel -p -c
 echo $url | xclip -selection clipboard
 echo $url | xclip -selection primary
 
-echo $url
-
 cp $tmp ~/screenshots/$filename
-s3cmd --config=/home/josh/.s3cfg-personal sync /home/josh/screenshots/ s3://j.yud.co.za/screenshots/
+s3cmd --config=$S3_CFG sync /home/josh/screenshots/ s3://j.yud.co.za/screenshots/
+echo "Screenshot uploaded."
   ''')
   notify('Screenshot has been uploaded.')
 
