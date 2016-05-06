@@ -6,9 +6,9 @@ from tooler import (
   Tooler,
   abort,
   bash,
-  bash_quote,
+  local,
+  shell_quote,
 )
-from tooler.local import PIPE
 
 import home
 import lights
@@ -34,7 +34,7 @@ def off():
 
 @tooler.command
 def notify(message):
-  bash('notify-send %s' % bash_quote(message))
+  bash('notify-send %s' % shell_quote(message))
 
 @tooler.command
 def ssh():
@@ -88,12 +88,7 @@ def decrypt(filename=None):
     sys.stderr.write('=========================\n')
     sys.stderr.flush()
 
-  result = bash('gpg -d', stdin=data, stdout=PIPE)
-  sys.stderr.write('=========================\n')
-  sys.stderr.flush()
-  print(result.stdout.decode('utf-8'))
-  sys.stderr.write('=========================\n')
-  sys.stderr.flush()
+  local('gpg -d', stdin=data)
 
 @tooler.command
 def cc():
@@ -133,4 +128,4 @@ def warm():
 
 
 if __name__ == '__main__':
-  tooler.run()
+  tooler.main()
